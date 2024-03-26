@@ -1,5 +1,2 @@
-# Trie
+# Trie Group Project
 
-## Implementation
-
-## Application
