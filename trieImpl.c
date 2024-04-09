@@ -3,8 +3,11 @@ Implementation of Trie Data Structure
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #define SIZE 26 // only supports lowercase a-z
+#define MAX_WORD_LENGTH 100
 
 /* Trie Node data structure */
 struct TrieNode {
@@ -91,6 +94,55 @@ int searchPrefix(struct TrieNode* head, char* prefix) {
     return 1; // no need to check whether it's the end
 }
 
+// Function to perform an autocomplete search based on a given prefix
+void autocomplete(struct TrieNode* root, const char *prefix) {
+    struct TrieNode *node = root; // Start from the root node
+    for (int i = 0; i < strlen(prefix); i++) { // For each character in the prefix
+        int index = prefix[i] - 'a'; // Convert the character to an index (0-25)
+        if (!node->chars[index]) // If the child node for this character doesn't exist
+            return; // The prefix doesn't exist in the Trie, so return
+        node = node->chars[index]; // Move to the child node
+    }
+    if (node->isEnd) // If the current node marks the end of a word
+        printf("%s\n", prefix); // Print the prefix because it's a word in the Trie
+    for (int i = 0; i < SIZE; i++) { // For each child node
+        if (node->chars[i]) { // If the child node exists
+            char nextPrefix[MAX_WORD_LENGTH]; // Create a new string to hold the next prefix
+            strcpy(nextPrefix, prefix); // Copy the current prefix to the next prefix
+            int len = strlen(nextPrefix); // Get the length of the next prefix
+            nextPrefix[len] = i + 'a'; // Add the current character to the next prefix
+            nextPrefix[len + 1] = '\0'; // Null-terminate the next prefix
+            autocomplete(root, nextPrefix); // Recursively call the function with the next prefix
+        }
+    }
+}
+// Function to check if a word exists in the Trie and print a message accordingly
+void spellCheck(struct TrieNode *root, const char *word) {
+    struct TrieNode *node = root; // Start from the root node
+    for (int i = 0; i < strlen(word); i++) { // For each character in the word
+        int index = word[i] - 'a'; // Convert the character to an index (0-25)
+        if (!node->chars[index]) { // If the child node for this character doesn't exist
+            printf("'%s' is not a valid word.\n", word); // The word doesn't exist in the Trie, so print a message
+            return; // Return because the rest of the word won't exist in the Trie
+        }
+        node = node->chars[index]; // Move to the child node
+    }
+    if (node->isEnd) // If the current node marks the end of a word
+        printf("'%s' is a valid word.\n", word); // The word exists in the Trie, so print a message
+    else // If the current node doesn't mark the end of a word
+        printf("'%s' is not a valid word.\n", word); // The word doesn't exist in the Trie, so print a message
+}
+// Function to insert a word into the Trie
+void insert(struct TrieNode *root, const char *word) {
+    struct TrieNode *node = root;
+    for (int i = 0; i < strlen(word); i++) {
+        int index = word[i] - 'a';
+        if (!node->chars[index])
+            node->chars[index] = initTrie();
+        node = node->chars[index];
+    }
+    node->isEnd = 1;
+}
 /* Print Trie */
 void printTrie(struct TrieNode* head) {
     if (head == NULL) {
@@ -146,6 +198,27 @@ int main() {
     printSearch(searchPrefix, head, "hello");
     printSearch(searchPrefix, head, "hel");
     printSearch(searchPrefix, head, "a");
+    
+   struct TrieNode *root = initTrie();
+
+    // Open the file containing the words
+    FILE *file = fopen("words.txt", "r");
+    if (file == NULL) {
+        printf("Could not open file words.txt\n");
+        return 1;
+    }
+
+    // Insert each word from the file into the Trie
+    char word[MAX_WORD_LENGTH];
+    while (fscanf(file, "%s", word) != EOF) {
+        insert(root, word);
+    }
+    fclose(file);
+
+    // Perform an autocomplete search based on user input
+    printf("Enter a prefix for autocomplete: ");
+    scanf("%s", word);
+    autocomplete(root, word);
 
     freeTrieNode(head);
 }
