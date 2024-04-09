@@ -13,29 +13,13 @@ Implementation of Trie Data Structure
 struct TrieNode {
     struct TrieNode* chars[SIZE]; // each node has 26 children
     int isEnd; // 1 == leaf node
-    char data; // for printing purpose
 };
 
-/* Function to initiate a trie.
-Basically same as the create trie node function but it does not take input. */
-struct TrieNode* initTrie() {
+/* Function to create a Trie node */
+struct TrieNode* createTrieNode() {
     // Allocate memoery for a node
     struct TrieNode* node = (struct TrieNode*) malloc(sizeof(struct TrieNode));
     node->isEnd = 0;
-    node->data = ' '; // root does not store data
-    // Initialize values of the node to null
-    for (int i = 0; i < SIZE; i++) {
-        node->chars[i] = NULL;
-    }
-    return node;
-}
-
-/* Function to create an empty Trie node */
-struct TrieNode* createTrieNode(char c) {
-    // Allocate memoery for a node
-    struct TrieNode* node = (struct TrieNode*) malloc(sizeof(struct TrieNode));
-    node->isEnd = 0;
-    node->data = c;
     // Initialize values of the node to null
     for (int i = 0; i < SIZE; i++) {
         node->chars[i] = NULL;
@@ -51,7 +35,7 @@ void insertWord(struct TrieNode* head, char* word) {
     for (int i = 0; word[i] != '\0'; i++) { // iterate through the word char by char
         int index = word[i] - 'a'; // index of the character in the child array
         if (curr->chars[index] == NULL) { // if the char does not exist in current child nodes
-            curr->chars[index] = createTrieNode(word[i]); // create a new node
+            curr->chars[index] = createTrieNode(); // create a new node
         }        
         curr = curr->chars[index]; // move to the next char node
     }
@@ -149,11 +133,12 @@ void printTrie(struct TrieNode* head) {
         return;
     }
     struct TrieNode* curr = head;
-    if (curr->data != ' ') { // don't print the root
-        printf(" -> %c", curr->data);
-    }
     for (int i = 0; i < SIZE; i++) {
-        printTrie(curr->chars[i]);
+        if (curr->chars[i] != NULL) {
+            char letter = (char) i + 'a';
+            printf(" -> %c", letter);
+            printTrie(curr->chars[i]);
+        }
     }
 }
 
@@ -183,9 +168,10 @@ void freeTrieNode(struct TrieNode* head) {
 }
 
 int main() {
-    struct TrieNode* head = initTrie();
+    struct TrieNode* head = createTrieNode();
     insertWord(head, "hello");
     printTrie(head);
+    printf("\n");
 
     printf("%d\n", searchWord(head, "hello"));
     printf("%d\n", searchPrefix(head, "hel"));
